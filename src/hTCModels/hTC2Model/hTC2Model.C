@@ -138,7 +138,7 @@ Foam::tmp<Foam::volScalarField> Foam::hTC2Model::Scv(const label i) const
         (
             IOobject
             (
-                "Scv_" + word(i),
+                "Scv_" + word(std::to_string(i)),
                 mesh_.time().timeName(),
                 mesh_,
                 IOobject::NO_READ,
@@ -180,7 +180,7 @@ Foam::tmp<Foam::volScalarField> Foam::hTC2Model::Siir(const label i) const
         (
             IOobject
             (
-                "Siir_" + word(i),
+                "Siir_" + word(std::to_string(i)),
                 mesh_.time().timeName(),
                 mesh_,
                 IOobject::NO_READ,

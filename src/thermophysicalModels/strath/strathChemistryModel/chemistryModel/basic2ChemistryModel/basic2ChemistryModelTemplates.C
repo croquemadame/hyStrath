@@ -28,6 +28,7 @@ License
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
+//Maybe change pulling chemistry props from mesh to thermo
 template<class ChemistryModel>
 Foam::autoPtr<ChemistryModel> Foam::basic2ChemistryModel::New
 (
@@ -111,10 +112,15 @@ Foam::autoPtr<ChemistryModel> Foam::basic2ChemistryModel::New
           + word(chemistryTypeDict.lookup("chemistryThermo")) + ','
           + thermoTypeName + ">";
 
-        typename ChemistryModel::fvMeshConstructorTable::iterator cstrIter =
-            ChemistryModel::fvMeshConstructorTablePtr_->find(chemistryTypeName);
+        //typename ChemistryModel::fvMeshConstructorTable::iterator cstrIter =
+        //    ChemistryModel::fvMeshConstructorTablePtr_->find(chemistryTypeName);
+        // line 108/109 in basicChemistryModelTemplates.C (of2412)
 
-        if (cstrIter == ChemistryModel::fvMeshConstructorTablePtr_->end())
+        const auto& cnstrTable = *(ChemistryModel::fvMeshConstructorTablePtr_);
+        auto* ctorPtr = cnstrTable.lookup(chemistryTypeName, nullptr);
+
+        //if (cstrIter == ChemistryModel::fvMeshConstructorTablePtr_->end())
+        if(!ctorPtr)
         {
             FatalErrorIn(ChemistryModel::typeName + "::New(const mesh&)")
                 << "Unknown " << ChemistryModel::typeName << " type " << nl
@@ -158,7 +164,7 @@ Foam::autoPtr<ChemistryModel> Foam::basic2ChemistryModel::New
             FatalError<< exit(FatalError);
         }
 
-        return autoPtr<ChemistryModel>(cstrIter()(mesh));
+        return autoPtr<ChemistryModel>(ctorPtr(mesh));
     }
     else
     {
@@ -167,10 +173,13 @@ Foam::autoPtr<ChemistryModel> Foam::basic2ChemistryModel::New
 
         Info<< "Selecting chemistry type " << chemistryTypeName << endl;
 
-        typename ChemistryModel::fvMeshConstructorTable::iterator cstrIter =
-            ChemistryModel::fvMeshConstructorTablePtr_->find(chemistryTypeName);
+        //typename ChemistryModel::fvMeshConstructorTable::iterator cstrIter =
+        //    ChemistryModel::fvMeshConstructorTablePtr_->find(chemistryTypeName);
 
-        if (cstrIter == ChemistryModel::fvMeshConstructorTablePtr_->end())
+        const auto& cnstrTable = *(ChemistryModel::fvMeshConstructorTablePtr_);
+        auto* ctorPtr = cnstrTable.lookup(chemistryTypeName, nullptr);
+
+        if (!ctorPtr)
         {
             FatalErrorIn(ChemistryModel::typeName + "::New(const mesh&)")
                 << "Unknown " << ChemistryModel::typeName << " type "
@@ -180,7 +189,7 @@ Foam::autoPtr<ChemistryModel> Foam::basic2ChemistryModel::New
                 << exit(FatalError);
         }
 
-        return autoPtr<ChemistryModel>(cstrIter()(mesh));
+        return autoPtr<ChemistryModel>(ctorPtr(mesh));
     }
 }
 

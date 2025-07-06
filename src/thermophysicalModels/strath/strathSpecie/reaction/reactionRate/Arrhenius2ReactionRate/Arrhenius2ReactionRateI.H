@@ -46,11 +46,15 @@ inline Arrhenius2ReactionRate::Arrhenius2ReactionRate
     const speciesTable&,
     Istream& is
 )
-:
-    A_(readScalar(is.readBegin("Arrhenius2ReactionRate(Istream&)"))),
-    beta_(readScalar(is)),
-    Ta_(readScalar(is))
+//:
+//    A_(readScalar(is.readBegin("Arrhenius2ReactionRate(Istream&)"))),
+//    beta_(readScalar(is)),
+//    Ta_(readScalar(is))
 {
+    is.readBegin("Arrhenius2ReactionRate(Istream&)");
+    A_ = readScalar(is);
+    beta_ = readScalar(is);
+    Ta_ = readScalar(is);
     is.readEnd("Arrhenius2ReactionRate(Istream&)");
 }
 

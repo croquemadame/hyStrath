@@ -2,11 +2,14 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016-2021 hyStrath
+    \\  /    A nd           | www.openfoam.com
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
+    Copyright (C) 2011-2016 OpenFOAM Foundation
+    Copyright (C) 2018-2020 OpenCFD Ltd.
+-------------------------------------------------------------------------------
 License
-    This file is part of hyStrath, a derivative work of OpenFOAM.
+    This file is part of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -50,6 +53,9 @@ void Foam::fv::rotorDiskSource::calculate
     scalar AOAmin = GREAT;
     scalar AOAmax = -GREAT;
 
+    // Cached position-dependent rotations available?
+    const bool hasCache = bool(Rcyl_);
+
     forAll(cells_, i)
     {
         if (area_[i] > ROOTVSMALL)
@@ -58,11 +64,18 @@ void Foam::fv::rotorDiskSource::calculate
 
             const scalar radius = x_[i].x();
 
+            const tensor Rcyl =
+            (
+                hasCache
+              ? (*Rcyl_)[i]
+              : coordSys_.R(mesh_.C()[celli])
+            );
+
             // Transform velocity into local cylindrical reference frame
-            vector Uc = cylindrical_->invTransform(U[celli], i);
+            vector Uc = invTransform(Rcyl, U[celli]);
 
             // Transform velocity into local coning system
-            Uc = R_[i] & Uc;
+            Uc = transform(Rcone_[i], Uc);
 
             // Set radial component of velocity to zero
             Uc.x() = 0.0;
@@ -129,10 +142,10 @@ void Foam::fv::rotorDiskSource::calculate
             liftEff += rhoRef_*localForce.z();
 
             // Transform force from local coning system into rotor cylindrical
-            localForce = invR_[i] & localForce;
+            localForce = invTransform(Rcone_[i], localForce);
 
-            // Transform force into global Cartesian co-ordinate system
-            force[celli] = cylindrical_->transform(localForce, i);
+            // Transform force into global Cartesian coordinate system
+            force[celli] = transform(Rcyl, localForce);
 
             if (divideVolume)
             {
@@ -165,40 +178,28 @@ void Foam::fv::rotorDiskSource::writeField
     const bool writeNow
 ) const
 {
-    typedef GeometricField<Type, fvPatchField, volMesh> fieldType;
-
     if (mesh_.time().writeTime() || writeNow)
     {
-        tmp<fieldType> tfield
-        (
-            new fieldType
-            (
-                IOobject
-                (
-                    name,
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-                mesh_,
-                dimensioned<Type>("zero", dimless, Zero)
-            )
-        );
-
-        Field<Type>& field = tfield.ref().primitiveFieldRef();
-
         if (cells_.size() != values.size())
         {
             FatalErrorInFunction
+                << "Size mismatch. Number of cells "
+                << cells_.size() << " != number of values "
+                << values.size() << nl
                 << abort(FatalError);
         }
 
-        forAll(cells_, i)
-        {
-            const label celli = cells_[i];
-            field[celli] = values[i];
-        }
+        auto tfield = GeometricField<Type, fvPatchField, volMesh>::New
+        (
+            name,
+            IOobject::NO_REGISTER,
+            mesh_,
+            dimensioned<Type>(dimless, Zero)
+        );
+
+        auto& field = tfield.ref().primitiveFieldRef();
+
+        UIndirectList<Type>(field, cells_) = values;
 
         tfield().write();
     }

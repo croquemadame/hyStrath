@@ -1,11 +1,13 @@
 #!/bin/bash
+
+
 cd ${0%/*}/.. || exit 1    # Run from hyStrath directory
 
-set -e
+set -e # exit if nonzero status is return
 
-userName=`whoami`
+userName=`whoami` 
 
-currentDir=`pwd`
+currentDir=`pwd` 
 sendingDir="$WM_PROJECT_USER_DIR"
 
 nProcs=1
@@ -13,13 +15,15 @@ if [ $# -ne 0 ]
   then nProcs=$1;
 fi
 
+echo $sendingDir
+
 mkdir -p $sendingDir
 
 
 # copy new files --------------------------------------------------------------
 foldersSrc="thermophysicalModels TurbulenceModels hTCModels mhdModels finiteVolume fvOptions functionObjects/forces functionObjects/field-cfdStrath"
 filesInFolderSrc="functionObjects"
-foldersApp="solvers/compressible/hy2Foam utilities/mesh/generation/makeAxialMesh utilities/mesh/generation/blockMeshDG"
+foldersApp="solvers/compressible/hy2Foam utilities/mesh/generation/makeAxialMesh utilities/mesh/generation/blockMeshDG solvers/tests"
 
 for folder in $foldersSrc
 do
@@ -39,6 +43,7 @@ do
 done
 
 cp -r $currentDir/run $sendingDir/
+
 
 
 # compile new libraries -------------------------------------------------------
@@ -83,14 +88,14 @@ cd $sendingDir/applications/solvers/compressible/hy2Foam/
 ./Allwclean
 ./Allwmake -j$nProcs
 
-#---- utilities ----
-cd $sendingDir/applications/utilities/mesh/generation/makeAxialMesh
-wclean
-wmake -j$nProcs
+#---- utilities ---- # TODO
+#cd $sendingDir/applications/utilities/mesh/generation/makeAxialMesh
+#wclean
+#wmake -j$nProcs
 
-cd $sendingDir/applications/utilities/mesh/generation/blockMeshDG
-wclean all
-./Allwmake -j$nProcs
+#cd $sendingDir/applications/utilities/mesh/generation/blockMeshDG
+#wclean all
+#./Allwmake -j$nProcs
 
 
 # re-set to the initial directory ---------------------------------------------

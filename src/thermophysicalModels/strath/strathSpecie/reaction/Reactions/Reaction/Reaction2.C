@@ -217,13 +217,24 @@ Foam::Reaction2<Reaction2Thermo>::specieCoeffs::specieCoeffs
 
         if (i != word::npos)
         {
+            //this operator(int, int) overload does not exist anymore
+            //
+            //using inherited std::basic_string<>::substr
+            /*
             string exponentStr = specieName
             (
                 i + 1,
                 specieName.size() - i - 1
             );
+            */
+            string exponentStr = specieName.substr
+            (
+                i + 1,
+                specieName.size() - i - 1
+            );
+
             exponent = atof(exponentStr.c_str());
-            specieName = specieName(0, i);
+            specieName = specieName.substr(0, i);
         }
 
         if (species.contains(specieName))
@@ -257,8 +268,9 @@ void Foam::Reaction2<Reaction2Thermo>::setLRhs
 
     while (is.good())
     {
-        dlrhs.append(specieCoeffs(species, is));
 
+        dlrhs.append(specieCoeffs(species, is));
+        enzo++;
         if (dlrhs.last().index != -1)
         {
             token t(is);
@@ -319,6 +331,7 @@ void Foam::Reaction2<Reaction2Thermo>::setLRhs
                 return;
             }
         }
+
     }
 
     FatalIOErrorIn("Reaction2<Reaction2Thermo>::setLRhs(Istream& is)", is)
@@ -427,10 +440,10 @@ Foam::Reaction2<Reaction2Thermo>::Reaction2
             << "transrotational, vibrational."
             << exit(FatalIOError);
     }
-
+    
     setLRhs
     (
-        IStringStream(dict.lookup("reaction"))(),
+        ICharStream(dict.getString("reaction"))(), //was IStringStream | .lookup
         species_,
         lhs_,
         rhs_
@@ -466,10 +479,14 @@ Foam::Reaction2<Reaction2Thermo>::New
 
     const word reactionTypeName(is);
 
-    typename IstreamConstructorTable::iterator cstrIter
-        = IstreamConstructorTablePtr_->find(reactionTypeName);
+    // based on divSchemes.C
 
-    if (cstrIter == IstreamConstructorTablePtr_->end())
+    //typename IstreamConstructorTable::iterator cstrIter
+    //    = IstreamConstructorTablePtr_->find(reactionTypeName);
+    auto* ctorPtr = IstreamConstructorTable(reactionTypeName);
+
+    //if (cstrIter == IstreamConstructorTablePtr_->end())
+    if(!ctorPtr) 
     {
         FatalIOErrorIn
         (
@@ -483,9 +500,13 @@ Foam::Reaction2<Reaction2Thermo>::New
             << exit(FatalIOError);
     }
 
-    return autoPtr<Reaction2<Reaction2Thermo> >
+    //return autoPtr<Reaction2<Reaction2Thermo> >
+    //(
+    //    cstrIter()(species, thermoDatabase, is)
+    //);
+    return autoPtr< Reaction2<Reaction2Thermo> >
     (
-        cstrIter()(species, thermoDatabase, is)
+        ctorPtr(species, thermoDatabase, is)
     );
 }
 
@@ -499,12 +520,16 @@ Foam::Reaction2<Reaction2Thermo>::New
     const dictionary& dict
 )
 {
-    const word& reactionTypeName = dict.lookup("type");
+    //const word& reactionTypeName = dict.lookup("type");
+    const word reactionTypeName(dict.get<word>("type"));
+    
+    //typename dictionaryConstructorTable::iterator cstrIter
+    //   = dictionaryConstructorTablePtr_->find(reactionTypeName);
+    
+    auto* ctorPtr = dictionaryConstructorTable(reactionTypeName);
 
-    typename dictionaryConstructorTable::iterator cstrIter
-        = dictionaryConstructorTablePtr_->find(reactionTypeName);
-
-    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    //if (cstrIter == dictionaryConstructorTablePtr_->end())
+    if(!ctorPtr)
     {
         FatalErrorIn
         (
@@ -521,9 +546,9 @@ Foam::Reaction2<Reaction2Thermo>::New
             << exit(FatalError);
     }
 
-    return autoPtr<Reaction2<Reaction2Thermo> >
+    return autoPtr< Reaction2<Reaction2Thermo> >
     (
-        cstrIter()(species, thermoDatabase, dict)
+        ctorPtr(species, thermoDatabase, dict)
     );
 }
 

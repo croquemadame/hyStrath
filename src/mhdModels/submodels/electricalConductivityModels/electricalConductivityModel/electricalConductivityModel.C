@@ -75,7 +75,7 @@ electricalConductivityModel::New
 
     Info<< "Selecting electrical conductivity model " << modelType << endl;
 
-    mhdModelConstructorTable::iterator cstrIter =
+    auto cstrIter =
         mhdModelConstructorTablePtr_->find(modelType);
 
     if (cstrIter == mhdModelConstructorTablePtr_->end())

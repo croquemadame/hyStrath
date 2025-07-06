@@ -51,7 +51,7 @@ Foam::hTC2Models::rho2HTCModel::New
 
     Info<< "Selecting hTC model " << hTempTypeName << endl;
 
-    dictionaryConstructorTable::iterator cstrIter =
+    auto cstrIter =
         dictionaryConstructorTablePtr_->find(hTempTypeName);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
@@ -68,7 +68,8 @@ Foam::hTC2Models::rho2HTCModel::New
 
     const label tempOpen = hTempTypeName.find('<');
 
-    const word className = hTempTypeName(0, tempOpen);
+    //const word className = hTempTypeName(0, tempOpen);  //return substring - operator overload from old Foam::string
+    const word className = hTempTypeName.substr(0, tempOpen);
 
     return autoPtr<rho2HTCModel> (cstrIter()(className, mesh));
 }

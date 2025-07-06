@@ -116,11 +116,14 @@ Foam::autoPtr<Foam::VTRelaxationModel> Foam::VTRelaxationModel::New
     (
         dict1.subDict("thermalRelaxationModels").subDict("VT").lookup("model")
     );
+    //old iterator
+    //dictionaryConstructorTable::iterator cstrIter =
+    //    dictionaryConstructorTablePtr_->find(VTRelaxationModelTypeName);
+    auto* ctorPtr = dictionaryConstructorTable(VTRelaxationModelTypeName);
 
-    dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(VTRelaxationModelTypeName);
 
-    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    //if (cstrIter == dictionaryConstructorTablePtr_->end())
+    if(!ctorPtr)
     {
         FatalErrorIn
         (
@@ -134,7 +137,7 @@ Foam::autoPtr<Foam::VTRelaxationModel> Foam::VTRelaxationModel::New
     }
 
     return autoPtr<VTRelaxationModel>
-        (cstrIter()(name1, name2, lname1, lname2, dict1, dict2, p, T, Tv, nD));
+        (ctorPtr(name1, name2, lname1, lname2, dict1, dict2, p, T, Tv, nD));
 }
 
 

@@ -2,11 +2,14 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016-2021 hyStrath
+    \\  /    A nd           | www.openfoam.com
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
+    Copyright (C) 2011-2015 OpenFOAM Foundation
+    Copyright (C) 2020 OpenCFD Ltd.
+-------------------------------------------------------------------------------
 License
-    This file is part of hyStrath, a derivative work of OpenFOAM.
+    This file is part of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -66,7 +69,7 @@ Foam::scalar Foam::seriesProfile::evaluateLift
     forAll(values, i)
     {
         // note: first contribution always zero since sin(0) = 0, but
-        // keep zero base to be consitent with drag coeffs
+        // keep zero base to be consistent with drag coeffs
         result += values[i]*sin(i*xIn);
     }
 
@@ -93,20 +96,22 @@ Foam::seriesProfile::seriesProfile
     }
     else
     {
-        dict.lookup("CdCoeffs") >> CdCoeffs_;
-        dict.lookup("ClCoeffs") >> ClCoeffs_;
+        dict.readEntry("CdCoeffs", CdCoeffs_);
+        dict.readEntry("ClCoeffs", ClCoeffs_);
     }
 
 
     if (CdCoeffs_.empty())
     {
-        FatalErrorInFunction
-            << "CdCoeffs must be specified" << exit(FatalError);
+        FatalIOErrorInFunction(dict)
+            << "CdCoeffs must be specified"
+            << exit(FatalIOError);
     }
     if (ClCoeffs_.empty())
     {
-        FatalErrorInFunction
-            << "ClCoeffs must be specified" << exit(FatalError);
+        FatalIOErrorInFunction(dict)
+            << "ClCoeffs must be specified"
+            << exit(FatalIOError);
     }
 }
 

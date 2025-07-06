@@ -191,7 +191,7 @@ void Foam::outletMappedUniformInletHeatAdditionFvPatchField::write
     fvPatchScalarField::write(os);
     os.writeKeyword("outletPatch")
         << outletPatchName_ << token::END_STATEMENT << nl;
-    writeEntryIfDifferent<word>(os, "phi", "phi", phiName_);
+    os.writeEntryIfDifferent<word>("phi", "phi", phiName_);
     os.writeKeyword("Q") << Q_ << token::END_STATEMENT << nl;
     os.writeKeyword("TMin") << TMin_ << token::END_STATEMENT << nl;
     os.writeKeyword("TMax") << TMax_ << token::END_STATEMENT << nl;

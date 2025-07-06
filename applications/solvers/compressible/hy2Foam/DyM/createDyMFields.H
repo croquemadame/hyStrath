@@ -26,11 +26,11 @@ hardcodedAdapFields[2] = "MachGradient";
 bool useCustomAdapField = false;
 
 word adapFieldName =
-    refineDict.subDict("dynamicRefineFvMeshCoeffs").lookup("field");
+    refineDict.subDict("dynamicRefineFvMeshCoeffs").lookup("field").toString();
     
 label refineInterval =
     refineDict.subDict("dynamicRefineFvMeshCoeffs")
-              .lookupOrDefault<label>("refineInterval", GREAT);
+              .lookupOrDefault<label>("refineInterval", labelMax); ///was GREAT
 
 volScalarField adapField
 (

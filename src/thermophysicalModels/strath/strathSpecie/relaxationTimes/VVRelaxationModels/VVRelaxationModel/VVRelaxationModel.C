@@ -85,10 +85,12 @@ Foam::autoPtr<Foam::VVRelaxationModel> Foam::VVRelaxationModel::New
 {
     word VVRelaxationModelTypeName(dict1.subDict("thermalRelaxationModels").subDict("VV").lookup("model"));
 
-    dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(VVRelaxationModelTypeName);
+    //dictionaryConstructorTable::iterator cstrIter =
+    //    dictionaryConstructorTablePtr_->find(VVRelaxationModelTypeName);
+    auto* ctorPtr = dictionaryConstructorTable(VVRelaxationModelTypeName);
 
-    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    //if (cstrIter == dictionaryConstructorTablePtr_->end())
+    if(!ctorPtr)
     {
         FatalErrorIn
         (
@@ -102,7 +104,7 @@ Foam::autoPtr<Foam::VVRelaxationModel> Foam::VVRelaxationModel::New
     }
 
     return autoPtr<VVRelaxationModel>
-        (cstrIter()(name1, name2, lname1, lname2, dict1, dict2, p, Tt, Tv, nD));
+        (ctorPtr(name1, name2, lname1, lname2, dict1, dict2, p, Tt, Tv, nD));
 }
 
 

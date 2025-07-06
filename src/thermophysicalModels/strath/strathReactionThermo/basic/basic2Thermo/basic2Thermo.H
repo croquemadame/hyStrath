@@ -54,6 +54,56 @@ class basic2Thermo
 :
     public IOdictionary
 {
+    // Private Data
+
+        //- Components names/order
+        static const wordList componentHeader4;
+
+        //- Components names/order
+        static const wordList componentHeader7;
+
+
+    // Private Member Functions
+
+        //- Construct name of thermo package from dictionary components
+        static word makeThermoName
+        (
+            const dictionary& dict,
+            const wordList*& cmptHeaderPtr
+        );
+
+        //- Look up field from registry or construct and store
+        static volScalarField& lookupOrConstruct
+        (
+            const fvMesh& mesh,
+            const word& fieldName,
+            bool& isOwner  //!< Stored to registry by this instance
+        );
+
+        //- Generic lookup for thermodynamics package thermoTypeName
+        //  \return constructor pointer, or FatalError
+        template<class Thermo, class ThermoConstructTable>
+        static typename ThermoConstructTable::mapped_type
+        getThermoOrDie
+        (
+            const dictionary& thermoTypeDict,
+            ThermoConstructTable& thermoTable,
+            const word& thermoTypeName,
+            const wordList& cmptNames
+        );
+
+        //- Generic lookup for each of the related thermodynamics packages
+        //  \return constructor pointer, or FatalError
+        template<class Thermo, class ThermoConstructTable>
+        static typename ThermoConstructTable::mapped_type
+        getThermoOrDie
+        (
+            const dictionary& thermoDict,
+            ThermoConstructTable& thermoTable
+        );
+
+
+
 
 protected:
 
@@ -62,6 +112,15 @@ protected:
         //- Phase-name
         const word& phaseName_;
 
+        //including these just in case
+        //- Pressure created and stored by this instance
+        bool pOwner_;
+
+        //- Temperature created and stored by this instance
+        bool TOwner_;
+
+        //- Include dpdt term in the enthalpy equation?
+        bool dpdt_;
 
         // Fields
 
@@ -76,6 +135,17 @@ protected:
 
 
     // Protected Member Functions
+
+        //- Return the enthalpy/internal energy field boundary types
+        //- by interrogating the temperature field boundary types
+        //wordList heBoundaryTypes();
+
+        //- Return the enthalpy/internal energy field boundary base types
+        //- by interrogating the temperature field boundary types
+        //wordList heBoundaryBaseTypes();
+
+        //- No copy construct
+        //basicThermo(const basicThermo&) = delete;
 
         //- Construct as copy (not implemented)
         basic2Thermo(const basic2Thermo&);
@@ -103,6 +173,16 @@ public:
         (mesh, phaseName)
     );
 
+    //- Declare run-time constructor selection table for dictionary based
+    declareRunTimeSelectionTable
+    (
+        autoPtr,
+        basic2Thermo,
+        fvMeshDictPhase,
+        (const fvMesh& mesh, const word& phaseName, const word& dictName),
+        (mesh, phaseName, dictName)
+    );
+
 
     // Constructors
 
@@ -121,9 +201,18 @@ public:
             const word& phaseName
         );
 
+        //- Construct from mesh, phase name and explicit naming of the
+        //- dictionary (so it can be shared amongst phases).
+        //basicThermo
+        //(
+        //    const fvMesh&,
+        //    const word& phaseName,
+        //    const word& dictionaryName
+        //);
+
 
     // Selectors
-
+        /*
         //- Generic lookup for each of the related thermodynamics packages
         template<class Thermo, class Table>
         static typename Table::iterator lookupThermo
@@ -156,6 +245,40 @@ public:
             const word& phaseName=word::null
         );
 
+        */
+
+        //- Generic New for each of the related thermodynamics packages
+        template<class Thermo>
+        static autoPtr<Thermo> New
+        (
+            const fvMesh&,
+            const word& phaseName = word::null
+        );
+
+        //- Generic New for each of the related thermodynamics packages
+        template<class Thermo>
+        static autoPtr<Thermo> New
+        (
+            const fvMesh&,
+            const dictionary&,
+            const word& phaseName = word::null
+        );
+
+        //- Generic New for each of the related thermodynamics packages
+        template<class Thermo>
+        static autoPtr<Thermo> New
+        (
+            const fvMesh&,
+            const word& phaseName,
+            const word& dictName
+        );
+
+        //- Specialisation of the Generic New for basicThermo
+        static autoPtr<basic2Thermo> New
+        (
+            const fvMesh&,
+            const word& phaseName = word::null
+        );
 
     //- Destructor
     virtual ~basic2Thermo();
@@ -179,7 +302,28 @@ public:
             return basic2Thermo::phasePropertyName(name, phaseName_);
         }
 
+        //- The phase property name scoped as scope:property.phase
+        //- \sa IOobject::groupName and \sa IOobject::scopedName
+        word phaseScopedName(const std::string& scope, const word& name) const
+        {
+            return IOobject::groupName
+            (
+                IOobject::scopedName(scope, name),
+                phaseName_
+            );
+        }
+
+
         static const basic2Thermo& lookupThermo(const fvPatchScalarField& pf);
+
+        //- Print (filtered) table of thermo names, splits on \c " ,<>"
+        static Ostream& printThermoNames
+        (
+            Ostream& os,
+            const wordList& cmptNames,
+            const wordList& thermoNames
+        );
+
 
         //- Check that the thermodynamics package is consistent
         //  with energy forms supported by the application
@@ -222,13 +366,35 @@ public:
         //- Split name of thermo package into a list of the components names
         static wordList splitThermoName
         (
-            const word& thermoName,
-            const int nCmpt
+            const std::string& thermoName,
+            const int nExpectedCmpts
         );
 
         //- Update properties
         virtual void correct() = 0;
 
+        //- Return the name of the thermo physics
+        //virtual word thermoName() const = 0;
+
+        //- Return true if the equation of state is incompressible
+        //  i.e. rho != f(p)
+        //virtual bool incompressible() const = 0;
+
+        //- Return true if the equation of state is isochoric
+        //  i.e. rho = const
+        //virtual bool isochoric() const = 0;
+
+        //- True if dpdt term should be included in enthalpy equation
+        bool dpdt() const noexcept
+        {
+            return dpdt_;
+        }
+
+        //- True if T should be updated
+        bool updateT() const noexcept
+        {
+            return TOwner_;
+        }
 
         // Access to thermodynamic state variables
 
@@ -281,7 +447,6 @@ public:
             //- Heat capacity ratio, gamma = Cp/Cv
             //  TODO
             virtual tmp<volScalarField> gamma() const = 0;
-
 
         // Fields derived from transport state variables
 

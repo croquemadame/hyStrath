@@ -2,11 +2,14 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016-2021 hyStrath
+    \\  /    A nd           | www.openfoam.com
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
+    Copyright (C) 2012-2017 OpenFOAM Foundation
+    Copyright (C) 2020 OpenCFD Ltd.
+-------------------------------------------------------------------------------
 License
-    This file is part of hyStrath, a derivative work of OpenFOAM.
+    This file is part of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -35,7 +38,6 @@ using namespace Foam::constant;
 namespace Foam
 {
     defineTypeNameAndDebug(fixedTrim, 0);
-
     addToRunTimeSelectionTable(trimModel, fixedTrim, dictionary);
 }
 
@@ -49,16 +51,10 @@ Foam::fixedTrim::fixedTrim
 )
 :
     trimModel(rotor, dict, typeName),
-    thetag_(rotor.cells().size(), 0.0)
+    thetag_(rotor.cells().size(), Zero)
 {
     read(dict);
 }
-
-
-// * * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * //
-
-Foam::fixedTrim::~fixedTrim()
-{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -67,9 +63,9 @@ void Foam::fixedTrim::read(const dictionary& dict)
 {
     trimModel::read(dict);
 
-    scalar theta0 = degToRad(readScalar(coeffs_.lookup("theta0")));
-    scalar theta1c = degToRad(readScalar(coeffs_.lookup("theta1c")));
-    scalar theta1s = degToRad(readScalar(coeffs_.lookup("theta1s")));
+    const scalar theta0 = degToRad(coeffs_.get<scalar>("theta0"));
+    const scalar theta1c = degToRad(coeffs_.get<scalar>("theta1c"));
+    const scalar theta1s = degToRad(coeffs_.get<scalar>("theta1s"));
 
     const List<point>& x = rotor_.x();
     forAll(thetag_, i)
@@ -91,19 +87,16 @@ void Foam::fixedTrim::correct
     const vectorField& U,
     vectorField& force
 )
-{
-    // do nothing
-}
+{}
 
 
 void Foam::fixedTrim::correct
 (
     const volScalarField rho,
     const vectorField& U,
-    vectorField& force)
-{
-    // do nothing
-}
+    vectorField& force
+)
+{}
 
 
 // ************************************************************************* //

@@ -2,3 +2,5 @@
 #####################
 logInstall-*
 logSync-*
+.vscode/
+.ccls-cache/

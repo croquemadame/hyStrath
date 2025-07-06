@@ -38,16 +38,38 @@ Foam::chemistry2Reader<ThermoType>::New
     // Let the chemistry reader type default to CHEMKIN
     // for backward compatibility
     //word chemistry2ReaderTypeName("chemkinReader");
-    word chemistry2ReaderTypeName("foam2ChemistryReader");
+    //word chemistry2ReaderTypeName("foam2ChemistryReader");
+
+    const word chemistry2Reader
+    (
+        thermoDict.getOrDefault<word>("chemistry2Reader", "foam2ChemistryReader")
+    );
 
     // otherwise use the specified reader
-    thermoDict.readIfPresent("chemistry2Reader", chemistry2ReaderTypeName);
+    //thermoDict.readIfPresent("chemistry2Reader", chemistry2ReaderTypeName);
 
-    Info<< "Selecting chemistry2Reader " << chemistry2ReaderTypeName << endl;
+    Info<< "Selecting chemistry2Reader " << chemistry2Reader << endl;
 
-    typename dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(chemistry2ReaderTypeName);
+    //typename dictionaryConstructorTable::iterator cstrIter =
+    //   dictionaryConstructorTablePtr_->find(chemistry2ReaderTypeName);
+    auto* ctorPtr = dictionaryConstructorTable(chemistry2Reader);
 
+    if (!ctorPtr)
+    {
+        FatalIOErrorInLookup
+        (
+            thermoDict,
+            "chemistry2Reader",
+            chemistry2Reader,
+            *dictionaryConstructorTablePtr_
+        ) << exit(FatalIOError);
+    }
+
+    return Foam::autoPtr<Foam::chemistry2Reader<ThermoType> >
+    (
+        ctorPtr(thermoDict, species)
+    );
+    /*
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
         FatalErrorIn
@@ -64,6 +86,7 @@ Foam::chemistry2Reader<ThermoType>::New
     (
         cstrIter()(thermoDict, species)
     );
+    */
 }
 
 

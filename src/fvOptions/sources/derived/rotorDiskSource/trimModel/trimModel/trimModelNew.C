@@ -2,11 +2,14 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016-2021 hyStrath
+    \\  /    A nd           | www.openfoam.com
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
+    Copyright (C) 2012-2015 OpenFOAM Foundation
+    Copyright (C) 2019-2021 OpenCFD Ltd.
+-------------------------------------------------------------------------------
 License
-    This file is part of hyStrath, a derivative work of OpenFOAM.
+    This file is part of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -33,24 +36,24 @@ Foam::autoPtr<Foam::trimModel> Foam::trimModel::New
     const dictionary& dict
 )
 {
-    const word modelType(dict.lookup(typeName));
+    const word modelType(dict.get<word>(typeName));
 
     Info<< "    Selecting " << typeName << " " << modelType << endl;
 
-    dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(modelType);
+    auto* ctorPtr = dictionaryConstructorTable(modelType);
 
-    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    if (!ctorPtr)
     {
-        FatalErrorInFunction
-            << "Unknown " << typeName << " type "
-            << modelType << nl << nl
-            << "Valid " << typeName << " types are:" << nl
-            << dictionaryConstructorTablePtr_->sortedToc()
-            << exit(FatalError);
+        FatalIOErrorInLookup
+        (
+            dict,
+            typeName,
+            modelType,
+            *dictionaryConstructorTablePtr_
+        ) << exit(FatalIOError);
     }
 
-    return autoPtr<trimModel>(cstrIter()(rotor, dict));
+    return autoPtr<trimModel>(ctorPtr(rotor, dict));
 }
 
 

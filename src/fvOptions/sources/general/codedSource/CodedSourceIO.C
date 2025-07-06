@@ -54,7 +54,7 @@ bool Foam::fv::CodedSource<Type>::read(const dictionary& dict)
                 false,
                 false
             );
-            codeCorrect_ = stringOps::trim(e.stream());
+            codeCorrect_ = stringOps::trim(e.stream().toString());
             stringOps::inplaceExpand(codeCorrect_, coeffs_);
             dynamicCodeContext::addLineDirective
             (
@@ -71,7 +71,7 @@ bool Foam::fv::CodedSource<Type>::read(const dictionary& dict)
                 false,
                 false
             );
-            codeAddSup_ = stringOps::trim(e.stream());
+            codeAddSup_ = stringOps::trim(e.stream().toString());
             stringOps::inplaceExpand(codeAddSup_, coeffs_);
             dynamicCodeContext::addLineDirective
             (
@@ -88,7 +88,7 @@ bool Foam::fv::CodedSource<Type>::read(const dictionary& dict)
                 false,
                 false
             );
-            codeSetValue_ = stringOps::trim(e.stream());
+            codeSetValue_ = stringOps::trim(e.stream().toString());
             stringOps::inplaceExpand(codeSetValue_, coeffs_);
             dynamicCodeContext::addLineDirective
             (

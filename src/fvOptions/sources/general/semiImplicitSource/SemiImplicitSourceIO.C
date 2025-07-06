@@ -32,7 +32,7 @@ bool Foam::fv::SemiImplicitSource<Type>::read(const dictionary& dict)
 {
     if (cellSetOption::read(dict))
     {
-        volumeMode_ = wordToVolumeModeType(coeffs_.lookup("volumeMode"));
+        volumeMode_ = wordToVolumeModeType(coeffs_.lookup("volumeMode").toString());
         setFieldData(coeffs_.subDict("injectionRateSuSp"));
 
         return true;

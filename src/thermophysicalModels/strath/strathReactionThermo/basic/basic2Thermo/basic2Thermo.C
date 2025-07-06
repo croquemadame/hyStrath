@@ -24,6 +24,16 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "basic2Thermo.H"
+#include "stringOps.H"
+#include "wordIOList.H"
+#include "zeroGradientFvPatchFields.H"
+#include "fixedEnergyFvPatchScalarField.H"
+#include "gradientEnergyFvPatchScalarField.H"
+#include "mixedEnergyFvPatchScalarField.H"
+#include "fixedJumpFvPatchFields.H"
+#include "fixedJumpAMIFvPatchFields.H"
+#include "energyJumpFvPatchScalarField.H"
+#include "energyJumpAMIFvPatchScalarField.H"
 
 
 /* * * * * * * * * * * * * * * private static data * * * * * * * * * * * * * */
@@ -32,9 +42,96 @@ namespace Foam
 {
     defineTypeNameAndDebug(basic2Thermo, 0);
     defineRunTimeSelectionTable(basic2Thermo, fvMesh);
+
+    defineRunTimeSelectionTable(basic2Thermo, fvMeshDictPhase);
 }
 
 const Foam::word Foam::basic2Thermo::dictName("thermophysicalProperties");
+
+//hystrath only uses the 7 component option
+const Foam::wordList Foam::basic2Thermo::componentHeader7
+({
+    "type",
+    "mixture",
+    "transport",
+    "thermo",
+    "equationOfState",
+    "specie",
+    "energy"
+});
+
+
+// * * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * //
+
+Foam::Ostream& Foam::basic2Thermo::printThermoNames
+(
+    Ostream& os,
+    const wordList& cmptNames,
+    const wordList& thermoNames
+)
+{
+    const int nCmpt = cmptNames.size();
+
+    // Build a table of constituent parts by split name into constituent parts
+    // - remove incompatible entries from the list
+    // - note: row-0 contains the names of constituent parts (ie, the header)
+
+    DynamicList<wordList> outputTbl;
+    outputTbl.resize(thermoNames.size()+1);
+
+    label rowi = 0;
+
+    // Header
+    outputTbl[rowi] = cmptNames;
+    if (!outputTbl[rowi].empty())
+    {
+        ++rowi;
+    }
+
+    for (const word& thermoName : thermoNames)
+    {
+        outputTbl[rowi] = basic2Thermo::splitThermoName(thermoName, nCmpt);
+        if (!outputTbl[rowi].empty())
+        {
+            ++rowi;
+        }
+    }
+
+    if (rowi > 1)
+    {
+        outputTbl.resize(rowi);
+        Foam::printTable(outputTbl, os);
+    }
+
+    return os;
+}
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+Foam::word Foam::basic2Thermo::makeThermoName
+(
+    const dictionary& thermoTypeDict,
+    const wordList*& cmptHeaderPtr
+)
+{
+    if (cmptHeaderPtr)
+    {
+        cmptHeaderPtr = &(componentHeader7);
+    }
+
+    return word
+    (
+          thermoTypeDict.get<word>("type") + '<'
+        + thermoTypeDict.get<word>("mixture") + '<'
+        + thermoTypeDict.get<word>("transport") + '<'
+        + thermoTypeDict.get<word>("thermo") + '<'
+        + thermoTypeDict.get<word>("equationOfState") + '<'
+        + thermoTypeDict.get<word>("specie") + ">>,"
+        + thermoTypeDict.get<word>("energy") + ">>>"
+    );
+    
+}
+
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -42,36 +139,37 @@ const Foam::word Foam::basic2Thermo::dictName("thermophysicalProperties");
 Foam::volScalarField& Foam::basic2Thermo::lookupOrConstruct
 (
     const fvMesh& mesh,
-    const char* name
-) const
+    const word& fieldName,
+    bool& isOwner
+)
 {
-    if (!mesh.objectRegistry::foundObject<volScalarField>(name))
+    auto* ptr = mesh.objectRegistry::getObjectPtr<volScalarField>(fieldName);
+
+    isOwner = !ptr;
+
+    if (!ptr)
     {
-        volScalarField* fPtr
+        ptr = new volScalarField
         (
-            new volScalarField
+            IOobject
             (
-                IOobject
-                (
-                    name,
-                    mesh.time().timeName(),
-                    mesh,
-                    IOobject::MUST_READ,
-                    IOobject::AUTO_WRITE
-                ),
-                mesh
-            )
+                fieldName,
+                mesh.time().timeName(),
+                mesh,
+                IOobject::MUST_READ,
+                IOobject::AUTO_WRITE,
+                IOobject::REGISTER
+            ),
+            mesh
         );
 
         // Transfer ownership of this object to the objectRegistry
-        fPtr->store(fPtr);
+        ptr->store();
     }
 
-    return const_cast<volScalarField&>
-    (
-        mesh.objectRegistry::lookupObject<volScalarField>(name)
-    );
+    return *ptr;
 }
+
 
 
 Foam::basic2Thermo::basic2Thermo
@@ -87,14 +185,18 @@ Foam::basic2Thermo::basic2Thermo
             phasePropertyName(dictName, phaseName),
             mesh.time().constant(),
             mesh,
-            IOobject::MUST_READ_IF_MODIFIED,
-            IOobject::NO_WRITE
+            IOobject::READ_MODIFIED,
+            IOobject::NO_WRITE,
+            IOobject::REGISTER
         )
     ),
 
     phaseName_(phaseName),
 
-    p_(lookupOrConstruct(mesh, "p")),
+    pOwner_(false),
+    TOwner_(false),
+
+    p_(lookupOrConstruct(mesh, "p", pOwner_)),
 
     pe_
     (
@@ -123,7 +225,9 @@ Foam::basic2Thermo::basic2Thermo
         mesh,
         dimTemperature
     )
-{}
+{
+    this->readIfPresent("updateT", TOwner_);  // Manual override
+}
 
 
 Foam::basic2Thermo::basic2Thermo
@@ -141,14 +245,18 @@ Foam::basic2Thermo::basic2Thermo
             mesh.time().constant(),
             mesh,
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::NO_WRITE,
+            IOobject::REGISTER
         ),
         dict
     ),
 
     phaseName_(phaseName),
 
-    p_(lookupOrConstruct(mesh, "p")),
+    pOwner_(false),
+    TOwner_(false),
+
+    p_(lookupOrConstruct(mesh, "p", pOwner_)),
     
     pe_
     (
@@ -177,7 +285,9 @@ Foam::basic2Thermo::basic2Thermo
         mesh,
         dimTemperature
     )
-{}
+{
+    this->readIfPresent("updateT", TOwner_);  // Manual override
+}
 
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
@@ -195,17 +305,28 @@ Foam::autoPtr<Foam::basic2Thermo> Foam::basic2Thermo::New
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::basic2Thermo::~basic2Thermo()
-{}
+{
+    if (pOwner_)
+    {
+        db().checkOut(p_.name());
+    }
+
+    if (TOwner_)
+    {
+        db().checkOut(T_.name());
+    }
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
 
 const Foam::basic2Thermo& Foam::basic2Thermo::lookupThermo
 (
     const fvPatchScalarField& pf
 )
 {
-    return pf.db().lookupObject<basic2Thermo>(dictName);
+    return pf.db().lookupObject<basic2Thermo>(dictName);   
 }
 
 
@@ -305,10 +426,11 @@ void Foam::basic2Thermo::validate
 
 Foam::wordList Foam::basic2Thermo::splitThermoName
 (
-    const word& thermoName,
-    const int nCmpt
+    const std::string& thermoName,
+    const int nExpectedCmpts
 )
 {
+    /*
     wordList cmpts(nCmpt);
 
     string::size_type beg=0, end=0, endb=0, endc=0;
@@ -345,6 +467,29 @@ Foam::wordList Foam::basic2Thermo::splitThermoName
     {
         cmpts[i] = thermoName.substr(beg, string::npos);
         cmpts[i++].replaceAll(">","");
+    }
+
+    return cmpts;
+    */
+    // Split on ",<>" but include space for good measure.
+    // Splits things like
+    // "hePsiThermo<pureMixture<const<hConst<perfectGas<specie>>,enthalpy>>>"
+
+    const auto parsed = stringOps::splitAny<std::string>(thermoName, " ,<>");
+    const int nParsed(parsed.size());
+
+    wordList cmpts;
+
+    if (!nExpectedCmpts || nParsed == nExpectedCmpts)
+    {
+        cmpts.resize(nParsed);
+
+        auto iter = cmpts.begin();
+        for (const auto& sub : parsed)
+        {
+            *iter = word(sub.str());
+            ++iter;
+        }
     }
 
     return cmpts;

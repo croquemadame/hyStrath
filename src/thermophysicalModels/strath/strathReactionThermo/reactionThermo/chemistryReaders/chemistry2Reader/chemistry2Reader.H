@@ -36,9 +36,11 @@ SourceFiles
 #define chemistry2Reader_H
 
 #include "typeInfo.H"
-#include "runTimeSelectionTables.H"
+#include "specieElement.H"
 #include "Reaction2.H"
 #include "Reaction2List.H"
+#include "runTimeSelectionTables.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

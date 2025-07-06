@@ -32,12 +32,13 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+/*
 template<class Reaction2Thermo>
-inline word& Reaction2<Reaction2Thermo>::name()
+inline word& Reaction2<Reaction2Thermo>::name() // can't return a reference of a const member with a non-const-return-valued-function
 {
     return name_;
 }
-
+*/
 
 template<class Reaction2Thermo>
 inline const word& Reaction2<Reaction2Thermo>::name() const

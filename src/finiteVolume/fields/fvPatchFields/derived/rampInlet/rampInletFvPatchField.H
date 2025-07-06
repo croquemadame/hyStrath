@@ -213,24 +213,29 @@ public:
             //- Return amplitude
             scalar amplitude() const
             {
-                return amplitude_;
+                const scalar t = this->db().time().timeOutputValue();
+                return amplitude_->value(t);
             }
 
-            scalar& amplitude()
-            {
-                return amplitude_;
-            }
+            // Returning value() as reference is causing rval/lval errors; Removed for now
+            //scalar& amplitude()
+            //{
+            //    const scalar t = this->db().time().timeOutputValue();
+            //    return amplitude_->value(t);
+            //}
 
             //- Return timeDuration
             scalar timeDuration() const
             {
-                return timeDuration_;
+                const scalar t = this->db().time().timeOutputValue();
+                return timeDuration_->value(t);
             }
 
-            scalar& timeDuration()
-            {
-                return timeDuration_;
-            }
+            //scalar& timeDuration()
+            //{
+            //    const scalar t = this->db().time().timeOutputValue();
+            //    return timeDuration_->value(t);
+            //}
 
 
         // Mapping functions

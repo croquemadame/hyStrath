@@ -47,7 +47,7 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
     Tlow_(Tlow),
     Thigh_(Thigh)
 {
-    for (register label coefLabel=0; coefLabel<nCoeffs_; coefLabel++)
+    for (label coefLabel=0; coefLabel<nCoeffs_; coefLabel++)
     {
         decoupledCvCoeffs_[coefLabel] = decoupledCvCoeffs[coefLabel];
     }
@@ -59,13 +59,13 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
     {
         if (nCoeffsMin != 0)
         {
-            for (register label coefLabel=0; coefLabel<nCoeffsMin; coefLabel++)
+            for (label coefLabel=0; coefLabel<nCoeffsMin; coefLabel++)
             {
                 vibrationalList_[coefLabel] = vibrationalList[coefLabel];
             }
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel<nCoeffsMax;
                 coefLabel++
             )
@@ -75,7 +75,7 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
         }
         else
         {
-            for (register label coefLabel=0; coefLabel<nCoeffsMax; coefLabel++)
+            for (label coefLabel=0; coefLabel<nCoeffsMax; coefLabel++)
             {
                 vibrationalList_.append(vibrationalList[coefLabel]);
             }
@@ -89,13 +89,13 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
     {
         if (nCoeffsMin != 0)
         {
-            for (register label coefLabel=0; coefLabel<nCoeffsMin; coefLabel++)
+            for (label coefLabel=0; coefLabel<nCoeffsMin; coefLabel++)
             {
                 electronicList_[coefLabel] = electronicList[coefLabel];
             }
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel<nCoeffsMax;
                 coefLabel++
             )
@@ -105,7 +105,7 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
         }
         else
         {
-            for (register label coefLabel=0; coefLabel<nCoeffsMax; coefLabel++)
+            for (label coefLabel=0; coefLabel<nCoeffsMax; coefLabel++)
             {
                 electronicList_.append(electronicList[coefLabel]);
             }
@@ -164,7 +164,7 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
     Tlow_(dem.Tlow_),
     Thigh_(dem.Thigh_)
 {
-    for (register label coefLabel=0; coefLabel<nCoeffs_; coefLabel++)
+    for (label coefLabel=0; coefLabel<nCoeffs_; coefLabel++)
     {
         decoupledCvCoeffs_[coefLabel] = dem.decoupledCvCoeffs_[coefLabel];
     }
@@ -186,13 +186,13 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
     {
         if (nCoeffsMin != 0)
         {
-            for (register label coefLabel=0; coefLabel<nCoeffsMin; coefLabel++)
+            for (label coefLabel=0; coefLabel<nCoeffsMin; coefLabel++)
             {
                 vibrationalList_[coefLabel] = dem.vibrationalList_[coefLabel];
             }
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel<nCoeffsMax;
                 coefLabel++
             )
@@ -202,7 +202,7 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
         }
         else
         {
-            for (register label coefLabel=0; coefLabel<nCoeffsMax; coefLabel++)
+            for (label coefLabel=0; coefLabel<nCoeffsMax; coefLabel++)
             {
                 vibrationalList_.append(dem.vibrationalList_[coefLabel]);
             }
@@ -216,13 +216,13 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
     {
         if (nCoeffsMin != 0)
         {
-            for (register label coefLabel=0; coefLabel<nCoeffsMin; coefLabel++)
+            for (label coefLabel=0; coefLabel<nCoeffsMin; coefLabel++)
             {
                 electronicList_[coefLabel] = dem.electronicList_[coefLabel];
             }
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel<nCoeffsMax;
                 coefLabel++
             )
@@ -232,7 +232,7 @@ Foam::decoupledEnergyModesThermo<EquationOfState>::decoupledEnergyModesThermo
         }
         else
         {
-            for (register label coefLabel=0; coefLabel<nCoeffsMax; coefLabel++)
+            for (label coefLabel=0; coefLabel<nCoeffsMax; coefLabel++)
             {
                 electronicList_.append(dem.electronicList_[coefLabel]);
             }
@@ -761,7 +761,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator+=
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel < decoupledEnergyModesThermo<EquationOfState>::nCoeffs_;
         coefLabel++
     )
@@ -790,7 +790,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator+=
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -805,7 +805,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator+=
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -818,7 +818,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator+=
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel < nCoeffsMin;
         coefLabel++
     )
@@ -837,7 +837,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator+=
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -852,7 +852,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator+=
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -865,7 +865,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator+=
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel < nCoeffsMin;
         coefLabel++
     )
@@ -895,7 +895,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator-=
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel<decoupledEnergyModesThermo<EquationOfState>::nCoeffs_;
         coefLabel++
     )
@@ -914,7 +914,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator-=
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -929,7 +929,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator-=
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -942,7 +942,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator-=
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel < nCoeffsMin;
         coefLabel++
     )
@@ -961,7 +961,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator-=
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -976,7 +976,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator-=
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -989,7 +989,7 @@ inline void Foam::decoupledEnergyModesThermo<EquationOfState>::operator-=
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel < nCoeffsMin;
         coefLabel++
     )
@@ -1025,7 +1025,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator+
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel<decoupledEnergyModesThermo<EquationOfState>::nCoeffs_;
         coefLabel++
     )
@@ -1054,7 +1054,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator+
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -1069,7 +1069,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator+
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -1084,7 +1084,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator+
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel < nCoeffsMin;
         coefLabel++
     )
@@ -1105,7 +1105,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator+
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -1120,7 +1120,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator+
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -1135,7 +1135,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator+
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel < nCoeffsMin;
         coefLabel++
     )
@@ -1181,7 +1181,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator-
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel<decoupledEnergyModesThermo<EquationOfState>::nCoeffs_;
         coefLabel++
     )
@@ -1210,7 +1210,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator-
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -1225,7 +1225,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator-
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -1240,7 +1240,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator-
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel < nCoeffsMin;
         coefLabel++
     )
@@ -1261,7 +1261,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator-
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -1276,7 +1276,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator-
         {
             for
             (
-                register label coefLabel=nCoeffsMin;
+                label coefLabel=nCoeffsMin;
                 coefLabel < nCoeffsMax;
                 coefLabel++
             )
@@ -1291,7 +1291,7 @@ inline Foam::decoupledEnergyModesThermo<EquationOfState> Foam::operator-
 
     for
     (
-        register label coefLabel=0;
+        label coefLabel=0;
         coefLabel < nCoeffsMin;
         coefLabel++
     )

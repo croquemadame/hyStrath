@@ -2,11 +2,14 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016-2021 hyStrath
+    \\  /    A nd           | www.openfoam.com
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
+    Copyright (C) 2012-2017 OpenFOAM Foundation
+    Copyright (C) 2021 OpenCFD Ltd.
+-------------------------------------------------------------------------------
 License
-    This file is part of hyStrath, a derivative work of OpenFOAM.
+    This file is part of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -45,22 +48,17 @@ Foam::trimModel::trimModel
 :
     rotor_(rotor),
     name_(name),
-    coeffs_(dictionary::null)
+    coeffs_()
 {
     read(dict);
 }
-
-// * * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * //
-
-Foam::trimModel::~trimModel()
-{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void Foam::trimModel::read(const dictionary& dict)
 {
-    coeffs_ = dict.subDict(name_ + "Coeffs");
+    coeffs_ = dict.optionalSubDict(name_ + "Coeffs");
 }
 
 

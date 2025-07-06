@@ -134,6 +134,8 @@ public:
         //- Generic New for each of the related chemistry model
         template<class Thermo>
         static autoPtr<Thermo> New(const fvMesh&);
+        
+        
 
 
     //- Destructor

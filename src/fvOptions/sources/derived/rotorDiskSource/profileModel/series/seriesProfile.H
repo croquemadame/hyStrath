@@ -2,11 +2,14 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016-2021 hyStrath
+    \\  /    A nd           | www.openfoam.com
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
+    Copyright (C) 2011-2013 OpenFOAM Foundation
+    Copyright (C) 2020 OpenCFD Ltd.
+-------------------------------------------------------------------------------
 License
-    This file is part of hyStrath, a derivative work of OpenFOAM.
+    This file is part of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -25,21 +28,62 @@ Class
     Foam::seriesProfile
 
 Description
-    Series-up based profile data - drag and lift coefficients computed as
-    sum of cosine series
+    Profile model where polar lift and drag coefficients are computed
+    as sum of trigonometric series by using an input angle of attack.
 
-        Cd = sum_i(CdCoeff)*cos(i*AOA)
-        Cl = sum_i(ClCoeff)*sin(i*AOA)
+    \f[
+        C_d = \sum_i\left(C_{dCoeff} \cos(i \alpha) \right)
+    \f]
 
-    where:
-        AOA = angle of attack [deg] converted to [rad] internally
-        Cd = drag coefficent
-        Cl = lift coefficent
+    \f[
+        C_l = \sum_i\left(C_{lCoeff} \sin(i \alpha) \right)
+    \f]
 
-    Input in two (arbitrary length) lists:
+    where
+    \vartable
+      C_d    | Drag coefficient
+      C_l    | Lift coefficient
+      \alpha | Angle of attack      [deg]
+    \endvartable
 
-        CdCoeffs (coeff1 coeff2 ... coeffN);
-        ClCoeffs (coeff1 coeff2 ... coeffN);
+Usage
+    Minimal example by using \c constant/fvOptions:
+    rotorDiskSource1
+    {
+        // Mandatory/Optional (inherited) entries
+        ...
+
+        // Mandatory entries (runtime modifiable)
+        profiles
+        {
+            // Mandatory entries (runtime modifiable)
+            <profile1>
+            {
+                // Mandatory entries (runtime modifiable)
+                type     series;
+                CdCoeffs (coeff1 coeff2 ... coeffN);
+                ClCoeffs (coeff1 coeff2 ... coeffN);
+            }
+
+            // Mandatory/Optional (inherited) entries
+            ...
+        }
+    }
+
+    where the entries mean:
+    \table
+      Property   | Description                   | Type       | Reqd | Dflt
+      CdCoeffs   | List of drag coefficients     | scalarList | yes  | -
+      ClCoeffs   | List of lift coefficients     | scalarList | yes  | -
+    \endtable
+
+Note
+  - Angle of attack is internally converted from [deg] to [rad].
+
+See also
+  - Foam::fv::rotorDiskSource
+  - Foam::profileModel
+  - Foam::seriesProfile
 
 SourceFiles
     seriesProfile.C
@@ -65,10 +109,9 @@ class seriesProfile
 :
     public profileModel
 {
-
 protected:
 
-    // Protected data
+    // Protected Data
 
         //- List of drag coefficient values
         List<scalar> CdCoeffs_;
@@ -79,7 +122,7 @@ protected:
 
     // Protected Member Functions
 
-        // Evaluate
+        // Evaluation
 
             //- Drag
             scalar evaluateDrag
@@ -101,16 +144,27 @@ public:
     //- Runtime type information
     TypeName("series");
 
-    //- Constructor
-    seriesProfile(const dictionary& dict, const word& modelName);
+
+    // Constructors
+
+        //- Constructor from dictionary and model name
+        seriesProfile(const dictionary& dict, const word& modelName);
+
+        //- No copy construct
+        seriesProfile(const seriesProfile&) = delete;
+
+        //- No copy assignment
+        void operator=(const seriesProfile&) = delete;
 
 
-    // Member functions
+    //- Destructor
+    ~seriesProfile() = default;
 
-        // Evaluation
 
-            //- Return the Cd and Cl for a given angle-of-attack
-            virtual void Cdl(const scalar alpha, scalar& Cd, scalar& Cl) const;
+    // Member Functions
+
+        //- Return the Cd and Cl for a given angle-of-attack
+        virtual void Cdl(const scalar alpha, scalar& Cd, scalar& Cl) const;
 };
 
 

@@ -102,16 +102,12 @@ Foam::autoPtr<Foam::binaryDiffusionModel> Foam::binaryDiffusionModel::New
     if (binaryDiffusionModelTypeName == "collisionData")
     {
         binaryDiffusionModelsubTypeName =
-            word
-            (
-                dictTransport.subDict("transportModels")
-                    .subDict("diffusionModelParameters")
-                    .lookup("collisionDataModel")
-            ).back();
+            (std::string(1, word(dictTransport.subDict("transportModels").subDict("diffusionModelParameters").lookup("collisionDataModel")).back()));
     }
 
-    dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find
+    //dictionaryConstructorTable::iterator cstrIter =
+    auto cstrIter = 
+    dictionaryConstructorTablePtr_->find
         (
             binaryDiffusionModelTypeName
           + binaryDiffusionModelsubTypeName

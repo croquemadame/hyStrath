@@ -117,12 +117,17 @@ bool Foam::functionObjects::specieReactionRates<ChemistryModelType>::write()
     const label nSpecie = chemistryModel_.nSpecie();
     const label nReaction = chemistryModel_.nReaction();
 
+    volRegion::update();        // Ensure cached values are valid
+
     // Region volume
-    const scalar V = this->V();
+    //const scalar V = this->V();
+
+    const scalar volTotal = this->volRegion::V();
+    const bool useAll = this->volRegion::useAllCells();
 
     for (label ri=0; ri<nReaction; ri++)
     {
-        writeTime(file());
+        writeCurrentTime(file());
         file() << token::TAB << ri;
 
         for (label si=0; si<nSpecie; si++)
@@ -134,7 +139,7 @@ bool Foam::functionObjects::specieReactionRates<ChemistryModelType>::write()
 
             scalar sumVRRi = 0;
 
-            if (isNull(cellIDs()))
+            if (useAll)
             {
                 sumVRRi = fvc::domainIntegrate(RR).value();
             }
@@ -146,7 +151,7 @@ bool Foam::functionObjects::specieReactionRates<ChemistryModelType>::write()
                 );
             }
 
-            file() << token::TAB << sumVRRi/V;
+            file() << token::TAB << sumVRRi/volTotal;
         }
 
         file() << nl;

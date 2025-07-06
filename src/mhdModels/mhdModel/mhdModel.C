@@ -103,7 +103,7 @@ mhdModel::mhdModel(const rho2ReactionThermo& thermo)
     hallEffect_(false),
     constBeta_(-1.0),
     coeffs_(dictionary::null),
-    electricalConductivity_(NULL)
+    electricalConductivity_(nullptr)
 {
     if (thermo.found("mhdDictFile"))
     {
@@ -141,7 +141,7 @@ mhdModel::mhdModel
     hallEffect_(lookupOrDefault<bool>("hallEffect", false)),
     constBeta_(lookupOrDefault<scalar>("constantHallParameter", -1.0)),
     coeffs_(subOrEmptyDict(type + "Coeffs")),
-    electricalConductivity_(NULL)
+    electricalConductivity_(nullptr) // was (NULL)
 {
     if (readOpt() == IOobject::NO_READ)
     {
@@ -178,7 +178,7 @@ mhdModel::mhdModel
     hallEffect_(lookupOrDefault<bool>("hallEffect", false)),
     constBeta_(lookupOrDefault<scalar>("constantHallParameter", -1.0)),
     coeffs_(subOrEmptyDict(type + "Coeffs")),
-    electricalConductivity_(NULL)
+    electricalConductivity_(nullptr)
 {}
 
 

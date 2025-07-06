@@ -72,10 +72,11 @@ Foam::autoPtr<Foam::eVRelaxationModel> Foam::eVRelaxationModel::New
 {
     word eVRelaxationModelTypeName(dict1.subDict("thermalRelaxationModels").subDict("eV").lookup("model"));
 
-    dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(eVRelaxationModelTypeName);
-
-    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    //dictionaryConstructorTable::iterator cstrIter =
+    //    dictionaryConstructorTablePtr_->find(eVRelaxationModelTypeName);
+    auto* ctorPtr = dictionaryConstructorTable(eVRelaxationModelTypeName);
+    //if (cstrIter == dictionaryConstructorTablePtr_->end())
+    if(!ctorPtr)
     {
         FatalErrorIn
         (
@@ -89,7 +90,7 @@ Foam::autoPtr<Foam::eVRelaxationModel> Foam::eVRelaxationModel::New
     }
 
     return autoPtr<eVRelaxationModel>
-        (cstrIter()(name1, lname1, dict1, dict2, p, Tv));
+        (ctorPtr(name1, lname1, dict1, dict2, p, Tv));
 }
 
 

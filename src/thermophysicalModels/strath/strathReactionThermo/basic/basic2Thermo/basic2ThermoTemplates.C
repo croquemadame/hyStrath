@@ -26,12 +26,12 @@ License
 #include "basic2Thermo.H"
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
-
+/*
 template<class Thermo, class Table>
 typename Table::iterator Foam::basic2Thermo::lookupThermo
 (
     const dictionary& thermoDict,
-    Table* tablePtr
+    Table* tablePtr //in v2412, this is a reference, not a pointer.
 )
 {
     word thermoTypeName;
@@ -65,10 +65,12 @@ typename Table::iterator Foam::basic2Thermo::lookupThermo
           + word(thermoTypeDict.lookup("energy")) + ">>>";
 
         // Lookup the thermo package
-        typename Table::iterator cstrIter = tablePtr->find(thermoTypeName);
+        //typename Table::iterator cstrIter = tablePtr->find(thermoTypeName);
+        auto ctorIter = tablePtr->cfind(thermoTypeName); 
 
         // Print error message if package not found in the table
-        if (cstrIter == tablePtr->end())
+        //if (cstrIter == tablePtr->end())
+        if(!ctorIter.good())
         {
             FatalErrorIn(Thermo::typeName + "::New")
                 << "Unknown " << Thermo::typeName << " type " << nl
@@ -108,7 +110,7 @@ typename Table::iterator Foam::basic2Thermo::lookupThermo
             FatalError<< exit(FatalError);
         }
 
-        return cstrIter;
+        return ctorIter.val();
     }
     else
     {
@@ -116,9 +118,9 @@ typename Table::iterator Foam::basic2Thermo::lookupThermo
 
         Info<< "Selecting thermodynamics package " << thermoTypeName << endl;
 
-        typename Table::iterator cstrIter = tablePtr->find(thermoTypeName);
-
-        if (cstrIter == tablePtr->end())
+        //typename Table::iterator cstrIter = tablePtr->find(thermoTypeName);
+        auto ctorIter = tablePtr->cfind(thermoTypeName);
+        if (!ctorIter.good())
         {
             FatalErrorIn(Thermo::typeName + "::New")
                 << "Unknown " << Thermo::typeName << " type "
@@ -128,11 +130,107 @@ typename Table::iterator Foam::basic2Thermo::lookupThermo
                 << exit(FatalError);
         }
 
-        return cstrIter;
+        return ctorIter.val();
     }
+}
+*/
+
+
+template<class Thermo, class ThermoConstructTable>
+typename ThermoConstructTable::mapped_type
+Foam::basic2Thermo::getThermoOrDie
+(
+    const dictionary& thermoTypeDict,
+    ThermoConstructTable& thermoTable,
+    const word& thermoTypeName,
+    const wordList& cmptNames
+)
+{
+    // Lookup the thermo package
+
+    auto ctorIter = thermoTable.cfind(thermoTypeName);
+
+    // Print error message if package not found in the table
+    if (!ctorIter.good())
+    {
+        FatalIOErrorInLookup
+        (
+            thermoTypeDict,
+            Thermo::typeName,
+            word::null, // Suppress long name? Just output dictionary (above)
+            thermoTable
+        );
+
+        basic2Thermo::printThermoNames
+        (
+            FatalIOError,
+            cmptNames,
+            thermoTable.sortedToc()
+        ) << exit(FatalIOError);
+
+        // return nullptr;
+    }
+
+    return ctorIter.val();
 }
 
 
+template<class Thermo, class ThermoConstructTable>
+typename ThermoConstructTable::mapped_type
+Foam::basic2Thermo::getThermoOrDie
+(
+    const dictionary& thermoDict,
+    ThermoConstructTable& thermoTable
+)
+{
+    const dictionary* dictptr = thermoDict.findDict("thermoType");
+
+    if (dictptr)
+    {
+        const auto& thermoTypeDict = *dictptr;
+
+        const wordList* cmptHeaderPtr = &(wordList::null());
+
+        // Thermo package name, constructed from components
+        const word thermoTypeName
+        (
+            basic2Thermo::makeThermoName(thermoTypeDict, cmptHeaderPtr)
+        );
+
+        Info<< "Selecting thermodynamics package " << thermoTypeDict << endl;
+
+        return getThermoOrDie<Thermo, ThermoConstructTable>
+        (
+            thermoTypeDict,
+            thermoTable,
+            thermoTypeName,
+            *cmptHeaderPtr
+        );
+    }
+    else
+    {
+        const word thermoTypeName(thermoDict.get<word>("thermoType"));
+
+        Info<< "Selecting thermodynamics package " << thermoTypeName << endl;
+
+        auto ctorIter = thermoTable.cfind(thermoTypeName);
+
+        if (!ctorIter.good())
+        {
+            FatalIOErrorInLookup
+            (
+                thermoDict,
+                Thermo::typeName,
+                thermoTypeName,
+                thermoTable
+            ) << exit(FatalIOError);
+        }
+
+        return ctorIter.val();
+    }
+}
+
+/*
 template<class Thermo>
 Foam::autoPtr<Thermo> Foam::basic2Thermo::New
 (
@@ -153,14 +251,82 @@ Foam::autoPtr<Thermo> Foam::basic2Thermo::New
         )
     );
 
-    typename Thermo::fvMeshConstructorTable::iterator cstrIter =
-        lookupThermo<Thermo, typename Thermo::fvMeshConstructorTable>
-        (
-            thermoDict,
-            Thermo::fvMeshConstructorTablePtr_
-        );
+    //typename Thermo::fvMeshConstructorTable::iterator cstrIter =
+    //    lookupThermo<Thermo, typename Thermo::fvMeshConstructorTable>
+    //    (
+    //        thermoDict,
+    //        Thermo::fvMeshConstructorTablePtr_
+    //    );
 
-    return autoPtr<Thermo>(cstrIter()(mesh, phaseName));
+    //return autoPtr<Thermo>(cstrIter()(mesh, phaseName));
+
+    auto* ctorPtr = lookupThermo<Thermo, typename Thermo::fvMeshConstructorTableType>
+    (
+        thermoDict,
+        ((Thermo::fvMeshConstructorTablePtr_))
+    );
+
+    return autoPtr<Thermo>(ctorPtr(mesh, phaseName));
+
+}
+*/
+/*
+template<class Thermo>
+Foam::autoPtr<Thermo> Foam::basic2Thermo::New
+(
+    const fvMesh& mesh,
+    const dictionary& dict,
+    const word& phaseName
+)
+{
+    //typename Thermo::dictionaryConstructorTable::iterator cstrIter =
+    //    lookupThermo<Thermo, typename Thermo::dictionaryConstructorTable>
+    //    (
+    //        dict,
+    //        Thermo::dictionaryConstructorTablePtr_
+    //    );
+//
+    //return autoPtr<Thermo>(cstrIter()(mesh, dict, phaseName));
+    
+    auto* ctorPtr = lookupThermo<Thermo, typename Thermo::dictionaryConstructorTableType>
+    (
+        dict,
+        ((Thermo::dictionaryConstructorTablePtr_))
+    );
+
+    return autoPtr<Thermo>(ctorPtr(mesh, dict, phaseName));
+
+}
+    */
+// * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
+
+template<class Thermo>
+Foam::autoPtr<Thermo> Foam::basic2Thermo::New
+(
+    const fvMesh& mesh,
+    const word& phaseName
+)
+{
+    IOdictionary thermoDict
+    (
+        IOobject
+        (
+            phasePropertyName(dictName, phaseName),
+            mesh.time().constant(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        )
+    );
+
+    auto* ctorPtr = getThermoOrDie<Thermo>
+    (
+        thermoDict,
+        *(Thermo::fvMeshConstructorTablePtr_)
+    );
+
+    return autoPtr<Thermo>(ctorPtr(mesh, phaseName));
 }
 
 
@@ -172,15 +338,46 @@ Foam::autoPtr<Thermo> Foam::basic2Thermo::New
     const word& phaseName
 )
 {
-    typename Thermo::dictionaryConstructorTable::iterator cstrIter =
-        lookupThermo<Thermo, typename Thermo::dictionaryConstructorTable>
-        (
-            dict,
-            Thermo::dictionaryConstructorTablePtr_
-        );
+    auto* ctorPtr = getThermoOrDie<Thermo>
+    (
+        dict,
+        *(Thermo::dictionaryConstructorTablePtr_)
+    );
 
-    return autoPtr<Thermo>(cstrIter()(mesh, dict, phaseName));
+    return autoPtr<Thermo>(ctorPtr(mesh, dict, phaseName));
 }
+
+
+template<class Thermo>
+Foam::autoPtr<Thermo> Foam::basic2Thermo::New
+(
+    const fvMesh& mesh,
+    const word& phaseName,
+    const word& dictName
+)
+{
+    IOdictionary thermoDict
+    (
+        IOobject
+        (
+            dictName,
+            mesh.time().constant(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE,
+            IOobject::NO_REGISTER
+        )
+    );
+
+    auto* ctorPtr = getThermoOrDie<Thermo>
+    (
+        thermoDict,
+        *(Thermo::fvMeshDictPhaseConstructorTablePtr_)
+    );
+
+    return autoPtr<Thermo>(ctorPtr(mesh, phaseName, dictName));
+}
+
 
 
 // ************************************************************************* //

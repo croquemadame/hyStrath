@@ -215,12 +215,12 @@ void Foam::nonEqSmoluchowskiJumpTvMixFvPatchScalarField::write
 {
     fvPatchScalarField::write(os);
 
-    writeEntryIfDifferent<word>(os, "U", "U", UName_);
-    writeEntryIfDifferent<word>(os, "rho", "rho", rhoName_);
-    writeEntryIfDifferent<word>(os, "mu", "mu", muName_);
-    writeEntryIfDifferent<word>(os, "alphave", "alphave", alphaName_);
-    writeEntryIfDifferent<word>(os, "gammatr", "gammatr", gammaName_);
-    writeEntryIfDifferent<word>(os, "mfp", "mfp", mfpName_);
+    os.writeEntryIfDifferent<word>("U", "U", UName_);
+    os.writeEntryIfDifferent<word>("rho", "rho", rhoName_);
+    os.writeEntryIfDifferent<word>("mu", "mu", muName_);
+    os.writeEntryIfDifferent<word>("alphave", "alphave", alphaName_);
+    os.writeEntryIfDifferent<word>("gammatr", "gammatr", gammaName_);
+    os.writeEntryIfDifferent<word>("mfp", "mfp", mfpName_);
 
     os.writeKeyword("accommodationCoeff")
         << accommodationCoeff_ << token::END_STATEMENT << nl;

@@ -238,7 +238,7 @@ Foam::hTC2Models::laminar2<Type>::Scv(const label i) const
         (
             IOobject
             (
-                typeName + ":Scv_" + word(i),
+                typeName + ":Scv_" + word(std::to_string(i)),
                 this->mesh().time().timeName(),
                 this->mesh(),
                 IOobject::NO_READ,
@@ -300,7 +300,7 @@ Foam::hTC2Models::laminar2<Type>::Siir(const label i) const
         (
             IOobject
             (
-                typeName + ":Siir_" + word(i),
+                typeName + ":Siir_" + word(std::to_string(i)),
                 this->mesh().time().timeName(),
                 this->mesh(),
                 IOobject::NO_READ,

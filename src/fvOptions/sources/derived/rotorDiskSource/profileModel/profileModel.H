@@ -2,11 +2,14 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016-2021 hyStrath
+    \\  /    A nd           | www.openfoam.com
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
+    Copyright (C) 2011-2013 OpenFOAM Foundation
+    Copyright (C) 2020 OpenCFD Ltd.
+-------------------------------------------------------------------------------
 License
-    This file is part of hyStrath, a derivative work of OpenFOAM.
+    This file is part of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -25,10 +28,59 @@ Class
     Foam::profileModel
 
 Description
-    Base class for profile models
+    Base class for profile models for handling
+    aerofoil lift and drag polar diagrams.
+
+Usage
+    Minimal example by using \c constant/fvOptions:
+    rotorDiskSource1
+    {
+        // Mandatory/Optional (inherited) entries
+        ...
+
+        // Mandatory entries (runtime modifiable)
+        profiles
+        {
+            // Mandatory entries (runtime modifiable)
+            <profile1>
+            {
+                type    <profileModel>;
+
+                // Mandatory/Optional (inherited) entries
+                ...
+            }
+            ...
+            <profileN>
+            {
+                ...
+            }
+
+            // Optional entries (runtime modifiable)
+            file        <fileName>;
+        }
+    }
+
+    where the entries mean:
+    \table
+      Property   | Description                          | Type  | Reqd | Dflt
+      type       | Profile model - see below            | word  | yes  | -
+      file  | Name of file containing profile characteristics | word   | no  | -
+    \endtable
+
+    Options for the \c type entry:
+    \verbatim
+      lookup    | Polar data is linearly interpolated based on angle of attack
+      series    | Polar data is computed as sum of cosine series
+    \endverbatim
+
+See also
+  - Foam::fv::rotorDiskSource
+  - Foam::lookupProfile
+  - Foam::seriesProfile
 
 SourceFiles
     profileModel.C
+    profileModelList.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -50,10 +102,9 @@ namespace Foam
 
 class profileModel
 {
-
 protected:
 
-    // Protected data
+    // Protected Data
 
         //- Coefficients dictionary
         const dictionary dict_;
@@ -67,7 +118,7 @@ protected:
 
     // Protected Member Functions
 
-        //- Return ture if file name is set
+        //- Return true if file name is set
         bool readFromFile() const;
 
 
@@ -77,7 +128,8 @@ public:
     TypeName("profileModel");
 
 
-        // Declare run-time constructor selection table
+    // Declare run-time constructor selection table
+
         declareRunTimeSelectionTable
         (
             autoPtr,
@@ -102,10 +154,10 @@ public:
 
 
     //- Destructor
-    virtual ~profileModel();
+    virtual ~profileModel() = default;
 
 
-    // Member functions
+    // Member Functions
 
         // Access
 

@@ -2,11 +2,14 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016-2021 hyStrath
+    \\  /    A nd           | www.openfoam.com
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
+    Copyright (C) 2014-2017 OpenFOAM Foundation
+    Copyright (C) 2018-2023 OpenCFD Ltd.
+-------------------------------------------------------------------------------
 License
-    This file is part of hyStrath, a derivative work of OpenFOAM.
+    This file is part of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -26,7 +29,7 @@ License
 #include "solidificationMeltingSource.H"
 #include "fvMatrices.H"
 #include "basicThermo.H"
-#include "uniformDimensionedFields.H"
+#include "gravityMeshObject.H"
 #include "zeroGradientFvPatchFields.H"
 #include "extrapolatedCalculatedFvPatchFields.H"
 #include "addToRunTimeSelectionTable.H"
@@ -36,32 +39,22 @@ License
 
 namespace Foam
 {
-    template<>
-    const char* NamedEnum
-    <
-        fv::solidificationMeltingSource::thermoMode,
-        2
-    >::names[] =
-    {
-        "thermo",
-        "lookup"
-    };
-
-    namespace fv
-    {
-        defineTypeNameAndDebug(solidificationMeltingSource, 0);
-
-        addToRunTimeSelectionTable
-        (
-            option,
-            solidificationMeltingSource,
-            dictionary
-        );
-    }
+namespace fv
+{
+    defineTypeNameAndDebug(solidificationMeltingSource, 0);
+    addToRunTimeSelectionTable(option, solidificationMeltingSource, dictionary);
+}
 }
 
-const Foam::NamedEnum<Foam::fv::solidificationMeltingSource::thermoMode, 2>
-    Foam::fv::solidificationMeltingSource::thermoModeTypeNames_;
+const Foam::Enum
+<
+    Foam::fv::solidificationMeltingSource::thermoMode
+>
+Foam::fv::solidificationMeltingSource::thermoModeTypeNames_
+({
+    { thermoMode::mdThermo, "thermo" },
+    { thermoMode::mdLookup, "lookup" },
+});
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -73,7 +66,7 @@ Foam::fv::solidificationMeltingSource::Cp() const
     {
         case mdThermo:
         {
-            const basicThermo& thermo =
+            const auto& thermo =
                 mesh_.lookupObject<basicThermo>(basicThermo::dictName);
 
             return thermo.Cp();
@@ -83,29 +76,19 @@ Foam::fv::solidificationMeltingSource::Cp() const
         {
             if (CpName_ == "CpRef")
             {
-                scalar CpRef = readScalar(coeffs_.lookup("CpRef"));
+                const scalar CpRef = coeffs_.get<scalar>("CpRef");
 
-                return tmp<volScalarField>
+                return volScalarField::New
                 (
-                    new volScalarField
+                    IOobject::scopedName(name_, "Cp"),
+                    mesh_,
+                    dimensionedScalar
                     (
-                        IOobject
-                        (
-                            name_ + ":Cp",
-                            mesh_.time().timeName(),
-                            mesh_,
-                            IOobject::NO_READ,
-                            IOobject::NO_WRITE
-                        ),
-                        mesh_,
-                        dimensionedScalar
-                        (
-                            "Cp",
-                            dimEnergy/dimMass/dimTemperature,
-                            CpRef
-                        ),
-                        extrapolatedCalculatedFvPatchScalarField::typeName
-                    )
+                        "Cp",
+                        dimEnergy/dimMass/dimTemperature,
+                        CpRef
+                    ),
+                    fvPatchFieldBase::extrapolatedCalculatedType()
                 );
             }
             else
@@ -123,22 +106,7 @@ Foam::fv::solidificationMeltingSource::Cp() const
         }
     }
 
-    return tmp<volScalarField>(nullptr);
-}
-
-
-Foam::vector Foam::fv::solidificationMeltingSource::g() const
-{
-    if (mesh_.foundObject<uniformDimensionedVectorField>("g"))
-    {
-        const uniformDimensionedVectorField& value =
-            mesh_.lookupObject<uniformDimensionedVectorField>("g");
-        return value.value();
-    }
-    else
-    {
-        return coeffs_.lookup("g");
-    }
+    return nullptr;
 }
 
 
@@ -154,10 +122,15 @@ void Foam::fv::solidificationMeltingSource::update(const volScalarField& Cp)
         Info<< type() << ": " << name_ << " - updating phase indicator" << endl;
     }
 
+    if (mesh_.topoChanging())
+    {
+        deltaT_.resize(cells_.size());
+    }
+
     // update old time alpha1 field
     alpha1_.oldTime();
 
-    const volScalarField& T = mesh_.lookupObject<volScalarField>(TName_);
+    const auto& T = mesh_.lookupObject<volScalarField>(TName_);
 
     forAll(cells_, i)
     {
@@ -167,7 +140,7 @@ void Foam::fv::solidificationMeltingSource::update(const volScalarField& Cp)
         scalar Cpc = Cp[celli];
         scalar alpha1New = alpha1_[celli] + relax_*Cpc*(Tc - Tmelt_)/L_;
 
-        alpha1_[celli] = max(0, min(alpha1New, 1));
+        alpha1_[celli] = clamp(alpha1New, zero_one{});
         deltaT_[i] = Tc - Tmelt_;
     }
 
@@ -187,44 +160,45 @@ Foam::fv::solidificationMeltingSource::solidificationMeltingSource
     const fvMesh& mesh
 )
 :
-    cellSetOption(sourceName, modelType, dict, mesh),
-    Tmelt_(readScalar(coeffs_.lookup("Tmelt"))),
-    L_(readScalar(coeffs_.lookup("L"))),
-    relax_(coeffs_.lookupOrDefault("relax", 0.9)),
-    mode_(thermoModeTypeNames_.read(coeffs_.lookup("thermoMode"))),
-    rhoRef_(readScalar(coeffs_.lookup("rhoRef"))),
-    TName_(coeffs_.lookupOrDefault<word>("T", "T")),
-    CpName_(coeffs_.lookupOrDefault<word>("Cp", "Cp")),
-    UName_(coeffs_.lookupOrDefault<word>("U", "U")),
-    phiName_(coeffs_.lookupOrDefault<word>("phi", "phi")),
-    Cu_(coeffs_.lookupOrDefault<scalar>("Cu", 100000)),
-    q_(coeffs_.lookupOrDefault("q", 0.001)),
-    beta_(readScalar(coeffs_.lookup("beta"))),
+    fv::cellSetOption(sourceName, modelType, dict, mesh),
+    Tmelt_(coeffs_.get<scalar>("Tmelt")),
+    L_(coeffs_.get<scalar>("L")),
+    relax_(coeffs_.getOrDefault<scalar>("relax", 0.9)),
+    mode_(thermoModeTypeNames_.get("thermoMode", coeffs_)),
+    rhoRef_(coeffs_.get<scalar>("rhoRef")),
+    TName_(coeffs_.getOrDefault<word>("T", "T")),
+    CpName_(coeffs_.getOrDefault<word>("Cp", "Cp")),
+    UName_(coeffs_.getOrDefault<word>("U", "U")),
+    phiName_(coeffs_.getOrDefault<word>("phi", "phi")),
+    Cu_(coeffs_.getOrDefault<scalar>("Cu", 100000)),
+    q_(coeffs_.getOrDefault<scalar>("q", 0.001)),
+    beta_(coeffs_.get<scalar>("beta")),
     alpha1_
     (
         IOobject
         (
-            name_ + ":alpha1",
+            IOobject::scopedName(name_, "alpha1"),
             mesh.time().timeName(),
             mesh,
             IOobject::READ_IF_PRESENT,
-            IOobject::AUTO_WRITE
+            IOobject::AUTO_WRITE,
+            IOobject::REGISTER
         ),
         mesh,
-        dimensionedScalar("alpha1", dimless, 0.0),
-        zeroGradientFvPatchScalarField::typeName
+        dimensionedScalar(dimless, Zero),
+        fvPatchFieldBase::zeroGradientType()
     ),
     curTimeIndex_(-1),
     deltaT_(cells_.size(), 0)
 {
-    fieldNames_.setSize(2);
+    fieldNames_.resize(2);
     fieldNames_[0] = UName_;
 
     switch (mode_)
     {
         case mdThermo:
         {
-            const basicThermo& thermo =
+            const auto& thermo =
                 mesh_.lookupObject<basicThermo>(basicThermo::dictName);
 
             fieldNames_[1] = thermo.he().name();
@@ -243,7 +217,7 @@ Foam::fv::solidificationMeltingSource::solidificationMeltingSource
         }
     }
 
-    applied_.setSize(2, false);
+    fv::option::resetApplied();
 }
 
 
@@ -285,7 +259,7 @@ void Foam::fv::solidificationMeltingSource::addSup
 
     update(Cp);
 
-    vector g = this->g();
+    const vector& g = meshObjects::gravity::New(mesh_.time()).value();
 
     scalarField& Sp = eqn.diag();
     vectorField& Su = eqn.source();
@@ -299,7 +273,7 @@ void Foam::fv::solidificationMeltingSource::addSup
         scalar alpha1c = alpha1_[celli];
 
         scalar S = -Cu_*sqr(1.0 - alpha1c)/(pow3(alpha1c) + q_);
-        vector Sb = rhoRef_*g*beta_*deltaT_[i];
+        vector Sb(rhoRef_*g*beta_*deltaT_[i]);
 
         Sp[celli] += Vc*S;
         Su[celli] += Vc*Sb;
@@ -316,6 +290,33 @@ void Foam::fv::solidificationMeltingSource::addSup
 {
     // Momentum source uses a Boussinesq approximation - redirect
     addSup(eqn, fieldi);
+}
+
+
+bool Foam::fv::solidificationMeltingSource::read(const dictionary& dict)
+{
+    if (fv::cellSetOption::read(dict))
+    {
+        coeffs_.readEntry("Tmelt", Tmelt_);
+        coeffs_.readEntry("L", L_);
+
+        coeffs_.readIfPresent("relax", relax_);
+
+        thermoModeTypeNames_.readEntry("thermoMode", coeffs_, mode_);
+
+        coeffs_.readEntry("rhoRef", rhoRef_);
+        coeffs_.readIfPresent("T", TName_);
+        coeffs_.readIfPresent("U", UName_);
+
+        coeffs_.readIfPresent("Cu", Cu_);
+        coeffs_.readIfPresent("q", q_);
+
+        coeffs_.readEntry("beta", beta_);
+
+        return true;
+    }
+
+    return false;
 }
 
 

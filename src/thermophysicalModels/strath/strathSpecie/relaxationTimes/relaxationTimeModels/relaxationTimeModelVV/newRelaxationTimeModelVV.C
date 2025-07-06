@@ -62,10 +62,13 @@ Foam::relaxationTimeModelVV::New
             << partialVVname << "\n" << endl;
     }
 
-    fvMeshConstructorTable::iterator cstrIter =
-        fvMeshConstructorTablePtr_->find(VVModelName);
+    //fvMeshConstructorTable::iterator cstrIter =
+    //    fvMeshConstructorTablePtr_->find(VVModelName);
+    auto* ctorPtr = fvMeshConstructorTable(VVModelName);
 
-    if (cstrIter == fvMeshConstructorTablePtr_->end())
+
+    //if (cstrIter == fvMeshConstructorTablePtr_->end())
+    if(!ctorPtr)
     {
         FatalErrorIn
         (
@@ -80,7 +83,7 @@ Foam::relaxationTimeModelVV::New
 
 
     return autoPtr<relaxationTimeModelVV>
-        (cstrIter()(thermo, turbulence));
+        (ctorPtr(thermo, turbulence));
 }
 
 

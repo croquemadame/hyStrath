@@ -58,6 +58,7 @@ SourceFiles
 #include "cellSet.H"
 #include "fvMesh.H"
 #include "Time.H"
+#include "NamedEnum.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -90,7 +91,7 @@ public:
         //- Word list of selection mode type names
         static const NamedEnum<selectionModeType, 4>
             selectionModeTypeNames_;
-
+        //static const Enum<selectionModeType> selectionModeTypeNames_;
 
 protected:
 

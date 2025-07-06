@@ -46,11 +46,15 @@ inline HoffertLienReactionRate::HoffertLienReactionRate
     const speciesTable&,
     Istream& is
 )
-:
-    A_(readScalar(is.readBegin("HoffertLienReactionRate(Istream&)"))),
-    beta_(readScalar(is)),
-    Ta_(readScalar(is))
+//:
+//    A_(readScalar(is.readBegin("HoffertLienReactionRate(Istream&)"))),
+//    beta_(readScalar(is)),
+//    Ta_(readScalar(is))
 {
+    is.readBegin("HoffertLienReactionRate(Istream&)");
+    A_ = readScalar(is);
+    beta_ = readScalar(is);
+    Ta_ = readScalar(is);
     is.readEnd("HoffertLienReactionRate(Istream&)");
 }
 

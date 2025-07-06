@@ -38,6 +38,9 @@ namespace Foam
 
 // * * * * * * * * * * * *  Protected member functions * * * * * * * * * * * //
 
+
+
+
 void Foam::fv::interRegionOption::setMapper()
 {
     if (master_)
@@ -65,9 +68,17 @@ void Foam::fv::interRegionOption::setMapper()
                 (
                     mesh_,
                     nbrMesh,
-                    meshToMesh::interpolationMethodNames_.read
+                    meshToMesh::interpolationMethodNames_.getOrDefault
                     (
-                        coeffs_.lookup("interpolationMethod")
+                        "interpolationMethod",
+                        coeffs_,
+                        meshToMesh::interpolationMethod::imCellVolumeWeight
+                    ),
+                    meshToMesh::procMapMethodNames_.getOrDefault
+                    (
+                        "procMapMethod",
+                        coeffs_,
+                        meshToMesh::procMapMethod::pmAABB
                     ),
                     false // not interpolating patches
                 )

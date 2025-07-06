@@ -53,10 +53,12 @@ Foam::mixingRule::New
     Info<< "\nLoading the transport mixing rule:" << tab 
         << partialMixingRuleName << "\n" << endl;
 
-    fvMeshConstructorTable::iterator cstrIter =
-        fvMeshConstructorTablePtr_->find(mixingRuleName);
+    //fvMeshConstructorTable::iterator cstrIter =
+    //    fvMeshConstructorTablePtr_->find(mixingRuleName);
+    auto* ctorPtr = fvMeshConstructorTable(mixingRuleName);
 
-    if (cstrIter == fvMeshConstructorTablePtr_->end())
+    //if (cstrIter == fvMeshConstructorTablePtr_->end())
+    if(!ctorPtr)
     {
         FatalErrorIn
         (
@@ -70,7 +72,7 @@ Foam::mixingRule::New
     }
 
     return autoPtr<mixingRule>
-        (cstrIter()(thermo, turbulence));
+        (ctorPtr(thermo, turbulence));
 }
 
 
