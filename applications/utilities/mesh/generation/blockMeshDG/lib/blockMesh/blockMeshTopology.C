@@ -540,7 +540,8 @@ Foam::polyMesh* Foam::blockMesh::createTopology
                 IOobject::NO_WRITE,
                 false
             ),
-            xferCopy(blockPointField_),   // copy these points, do NOT move
+            //xferCopy(blockPointField_),   // copy these points, do NOT move
+            pointField(blockPointField_),
             tmpBlockCells,
             tmpBlocksPatches,
             patchNames,
@@ -589,7 +590,8 @@ Foam::polyMesh* Foam::blockMesh::createTopology
                 IOobject::NO_WRITE,
                 false
             ),
-            xferCopy(blockPointField_),   // copy these points, do NOT move
+            //xferCopy(blockPointField_),   // copy these points, do NOT move
+            pointField(blockPointField_),
             tmpBlockCells,
             tmpBlocksPatches,
             patchNames,

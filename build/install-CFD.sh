@@ -23,7 +23,7 @@ mkdir -p $sendingDir
 # copy new files --------------------------------------------------------------
 foldersSrc="thermophysicalModels TurbulenceModels hTCModels mhdModels finiteVolume fvOptions functionObjects/forces functionObjects/field-cfdStrath"
 filesInFolderSrc="functionObjects"
-foldersApp="solvers/compressible/hy2Foam utilities/mesh/generation/makeAxialMesh utilities/mesh/generation/blockMeshDG solvers/tests"
+foldersApp="solvers/compressible/hy2Foam utilities/mesh/generation/makeAxialMesh utilities/mesh/generation/blockMeshDG"
 
 for folder in $foldersSrc
 do
@@ -89,13 +89,13 @@ cd $sendingDir/applications/solvers/compressible/hy2Foam/
 ./Allwmake -j$nProcs
 
 #---- utilities ---- # TODO
-#cd $sendingDir/applications/utilities/mesh/generation/makeAxialMesh
-#wclean
-#wmake -j$nProcs
+cd $sendingDir/applications/utilities/mesh/generation/makeAxialMesh
+wclean
+wmake -j$nProcs
 
-#cd $sendingDir/applications/utilities/mesh/generation/blockMeshDG
-#wclean all
-#./Allwmake -j$nProcs
+cd $sendingDir/applications/utilities/mesh/generation/blockMeshDG
+wclean all
+./Allwmake -j$nProcs
 
 
 # re-set to the initial directory ---------------------------------------------

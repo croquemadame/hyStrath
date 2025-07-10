@@ -222,7 +222,8 @@ int main(int argc, char *argv[])
             runTime.constant(),
             runTime
         ),
-        xferCopy(blocks.points()),           // could we re-use space?
+        //xferCopy(blocks.points()),           // could we re-use space?
+        pointField(blocks.points()),           // similar approach to line 367 of blockMeshCreate.C (of2412) // Use a copy of the block points
         blocks.cells(),
         blocks.patches(),
         blocks.patchNames(),

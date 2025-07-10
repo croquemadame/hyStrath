@@ -270,7 +270,7 @@ void Foam::Reaction2<Reaction2Thermo>::setLRhs
     {
 
         dlrhs.append(specieCoeffs(species, is));
-        enzo++;
+      
         if (dlrhs.last().index != -1)
         {
             token t(is);
